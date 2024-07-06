@@ -42,9 +42,7 @@ def start():
                 pygame.quit()
             else:
                 player_1.handle_collision_event(event)
-                player_2.handle_collision_event(event)
-            # Get the state of all keyboard buttons
-        
+                player_2.handle_collision_event(event)     
 
 
 
@@ -54,4 +52,7 @@ def start():
 
 
 if __name__ == "__main__":
+    diff = 1
+    WIDTH = 1000 * diff
+    HEIGHT = (WIDTH * 0.555) * diff
     start()
