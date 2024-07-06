@@ -40,6 +40,17 @@ Enter repository
 cd Two-person-space-shooter
 ```
 
+Install virtual environment
+```bash
+python -m venv .venv
+```
+
+Install app dependencies
+```
+pip install -r requirements.txt
+```
+
+
 ## Usage & Controls
 
 Run app
