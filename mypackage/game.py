@@ -1,11 +1,13 @@
 from .utilities import ImageHandler, SFXHandler
 import pygame
+pygame.font.init()
 
 PLAYER_1_HIT = pygame.USEREVENT + 1
 PLAYER_2_HIT = pygame.USEREVENT + 2
 
+
 class GameBoard(ImageHandler):
-    def __init__(self, w, h) -> None:
+    def __init__(self, w, h, p1, p2) -> None:
         super().__init__()
         self.width = w
         self.height = h
@@ -13,30 +15,64 @@ class GameBoard(ImageHandler):
         # Overide ImageHandler attributes
         self.ship_size = (self.width * 0.1, self.width * 0.1)
         self.screen_size = (self.width, self.height)
-        self.colors = {"border": "#4779c4"}
+        self.colors = {"border": "#4779c4", "health_font": "white", "winner_font": "white"}
+        self.player_1 = p1
+        self.player_2 = p2
+        self.health_font = pygame.font.SysFont("timesnewroman", int(self.width * 0.05))
+        self.winner_font = pygame.font.SysFont("timesnewroman", int(self.width * 0.08))
 
     def render_game(self, surface):
+        """Renders all game elements"""
         self.render_background(surface)
         self.render_border(surface)
+        self.render_score_details(surface)
+        self.player_1.draw(surface)
+        self.player_2.draw(surface)
+        self.render_winner(surface)
 
     def render_background(self, surface):
+        """Renders background image"""
         surface.blit(self.get_background(), (0,0))
 
     def render_border(self, surface):
+        """Renders a full height rectangle at center of screen"""
         size = (self.width * 0.005, self.height)
         pos = (self.width * 0.5 + (size[0] // 2), 0)
         pygame.draw.rect(surface, self.colors["border"], [pos, size])
 
+    def render_score_details(self, surface):
+        """Renders the health values of both players"""
+        player_1_health = self.health_font.render(f"Health: {self.player_1.health}", 1,self.colors["health_font"])
+        player_2_health = self.health_font.render(f"Health: {self.player_2.health}", 1,self.colors["health_font"])
 
+        surface.blit(player_1_health, (0,0))
+        surface.blit(player_2_health, ((self.width - player_2_health.get_width()),0))
+
+
+    def render_winner(self, surface):
+        winner = self.check_winner()
+        if winner:
+            winner_text = self.winner_font.render(f"{winner}", 1, self.colors["winner_font"])
+            surface.blit(winner_text, ((self.width * 0.5) - (winner_text.get_width() // 2), (self.height * 0.5) - (winner_text.get_height() // 2)))
+            
+    def check_winner(self):
+        """Returns winner"""
+        if self.player_1.health == 0:
+            return "Player 2 Wins"
+        elif self.player_2.health == 0:
+            return "Player 1 Wins"
+
+            
 
 
 class Player(ImageHandler, SFXHandler):
-    def __init__(self, w, h, ship_type, p: str, x: int) -> None:
-        super().__init__()
+    def __init__(self, w: int, h: int, ship_type: int, player: str, x: int) -> None:
+        ImageHandler.__init__(self)
+        SFXHandler.__init__(self)
         """Inializes Player Details and Controls"""
         self.w = w
         self.h = h
-        self.p = p
+        self.player = player
         self.image = self.choose_ship(ship_type)
         self.p_width = w * 0.1
         self.p_height = w * 0.1
@@ -51,7 +87,7 @@ class Player(ImageHandler, SFXHandler):
         self.ball_speed = 4
         self.energy_balls_list:list = []
         self.energy_ball_cooldown = 0
-        self.max_cooldown = 10
+        self.max_cooldown = 20
 
 
 
@@ -60,7 +96,6 @@ class Player(ImageHandler, SFXHandler):
         self.handle_energy_balls(surface)
     def update(self, key, surface):
         """Updates all player details including ship and bullet position and status"""
-        self.draw(surface)
 
         # Decrement cooldown
         if self.energy_ball_cooldown > 0:
@@ -70,7 +105,7 @@ class Player(ImageHandler, SFXHandler):
         self.validate_energy_balls()
 
 
-        if self.p == "p1":
+        if self.player == "p1":
             # Initialize Bounds
             r_bnd = self.w * 0.5
             l_bnd = 0
@@ -90,9 +125,10 @@ class Player(ImageHandler, SFXHandler):
             # Handle player 1'senergy ball movement
             if key[pygame.K_SPACE] and self.energy_ball_cooldown == 0:
                 self.add_energy_balls()
+                self.play_energy_ball_sound()
                 self.energy_ball_cooldown = self.max_cooldown
-        
-        if self.p == "p2":
+
+        if self.player == "p2":
             # Initialize Bounds
             r_bnd = self.w 
             l_bnd = self.w * 0.5
@@ -112,10 +148,12 @@ class Player(ImageHandler, SFXHandler):
             # Hanlde player 2's energy ball movement
             if key[pygame.K_RSHIFT] and self.energy_ball_cooldown == 0:
                 self.add_energy_balls()
+                self.play_energy_ball_sound()
                 self.energy_ball_cooldown = self.max_cooldown
 
     def validate_energy_balls(self):
-        print(self.energy_balls_list)
+        """Iterates through list of energy ball bullets and removes balls them from list if they
+        are out of bound"""
         i = 0
         while i < len(self.energy_balls_list):
             ball = self.energy_balls_list[i]
@@ -134,18 +172,21 @@ class Player(ImageHandler, SFXHandler):
         for ball in self.energy_balls_list:
             if ball["ball_rect"].colliderect(enemy_player):
                 if ball["player"] == "p1":
-                    pygame.event.post(PLAYER_2_HIT)
+                    pygame.event.post(pygame.event.Event(PLAYER_2_HIT))
                 elif ball["player"] == "p2":
-                    pygame.event.post(PLAYER_1_HIT)
+                    pygame.event.post(pygame.event.Event(PLAYER_1_HIT))
+                self.energy_balls_list.remove(ball)
             
     def handle_collision_event(self, event):
         """Checks if player his event has been envoked"""
-        if self.p == "p1":
+        if self.player == "p1":
             if event.type == PLAYER_1_HIT:
                 self.health -= 1
-        elif self.p == "p2":
+                self.play_ship_hit_sound()
+        elif self.player == "p2":
             if event.type == PLAYER_2_HIT:
                 self.health -= 1
+                self.play_ship_hit_sound()
 
 
     def add_energy_balls(self):
@@ -157,7 +198,7 @@ class Player(ImageHandler, SFXHandler):
             data = {
                 "ball_image": ball_img,
                 "ball_rect": rect,
-                "player": self.p
+                "player": self.player
             }
             self.energy_balls_list.append(data)
 
@@ -186,9 +227,9 @@ class Player(ImageHandler, SFXHandler):
 
 
     def choose_ship(self, ship_type):
-        if self.p == "p1":
+        if self.player == "p1":
             degree = 270
-        elif self.p == "p2":
+        elif self.player == "p2":
             degree = 90
         if ship_type == 1:
             return self.get_ship_1(degree)

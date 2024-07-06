@@ -5,11 +5,11 @@ from pygame import image, transform, mixer
 
 class ImageHandler:
     def __init__(self) -> None:
-        self.__ship_1 = Image.open("../static/assets/images/spiked_ship_3_small_blue.PNG")
-        self.__ship_2 = Image.open("../static/assets/images/spiked_ship_3_red.PNG")
-        self.__ship_3 = Image.open("../static/assets/images/spiked_ship_3_small_green.PNG")
-        self.__background = Image.open("../static/assets/images/space_2.jpg")
-        self.__energy_ball = Image.open("../static/assets/images/energy_ball.png")
+        self.__ship_1 = Image.open("static/assets/images/spiked_ship_3_small_blue.PNG")
+        self.__ship_2 = Image.open("static/assets/images/spiked_ship_3_red.PNG")
+        self.__ship_3 = Image.open("static/assets/images/spiked_ship_3_small_green.PNG")
+        self.__background = Image.open("static/assets/images/space_2.jpg")
+        self.__energy_ball = Image.open("static/assets/images/energy_ball.png")
         self.ship_size = (50, 50)
         self.screen_size = (1000, 555)
         self.ball_size = (50, 50)
@@ -40,8 +40,8 @@ class ImageHandler:
 
 class SFXHandler:
     def __init__(self) -> None:
-        self.__energy_ball_sound = mixer.Sound("../static/assets/sfx/energy_ball_sound.wav")
-        self.__ship_hit_sound = mixer.Sound("../static/assets/sfx/ship_hit_sound.wav")
+        self.__energy_ball_sound = mixer.Sound("static/assets/sfx/energy_ball_sound.wav")
+        self.__ship_hit_sound = mixer.Sound("static/assets/sfx/ship_hit_sound.flac")
 
     def play_energy_ball_sound(self):
         self.__energy_ball_sound.play()
