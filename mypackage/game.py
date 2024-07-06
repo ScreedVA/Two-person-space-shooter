@@ -15,7 +15,7 @@ class GameBoard(ImageHandler):
         # Overide ImageHandler attributes
         self.ship_size = (self.width * 0.1, self.width * 0.1)
         self.screen_size = (self.width, self.height)
-        self.colors = {"border": "#4779c4", "health_font": "white", "winner_font": "white"}
+        self.colors = {"border": "#4779c4", "health_font": ["white", "red"], "winner_font": "white"}
         self.player_1 = p1
         self.player_2 = p2
         self.health_font = pygame.font.SysFont("timesnewroman", int(self.width * 0.05))
@@ -42,8 +42,18 @@ class GameBoard(ImageHandler):
 
     def render_score_details(self, surface):
         """Renders the health values of both players"""
-        player_1_health = self.health_font.render(f"Health: {self.player_1.health}", 1,self.colors["health_font"])
-        player_2_health = self.health_font.render(f"Health: {self.player_2.health}", 1,self.colors["health_font"])
+        if self.player_1.health < 4:
+            p1_color_toggle = 1
+        else:
+            p1_color_toggle = 0
+        if self.player_2.health < 4:
+            p2_color_toggle = 1
+        else:
+            p2_color_toggle = 0
+
+        player_1_health = self.health_font.render(f"Health: {self.player_1.health}", 1,self.colors["health_font"][p1_color_toggle])
+
+        player_2_health = self.health_font.render(f"Health: {self.player_2.health}", 1,self.colors["health_font"][p2_color_toggle])
 
         surface.blit(player_1_health, (0,0))
         surface.blit(player_2_health, ((self.width - player_2_health.get_width()),0))
@@ -94,6 +104,7 @@ class Player(ImageHandler, SFXHandler):
     def draw(self, surface):
         surface.blit(self.image, self.rect)
         self.handle_energy_balls(surface)
+
     def update(self, key, surface):
         """Updates all player details including ship and bullet position and status"""
 
